@@ -28,6 +28,13 @@ def p_MC(v, p, t):                      # Р(М, С)
     np.savetxt(f"lab1/p_MC_var{v}.csv", res, delimiter=";", fmt='%.6g')       
     return res
 
+def p_M_C(v, c, mc):                                                  # P(M | C)
+    res = np.empty((20, 20))
+    for i in range(20):
+        res[i] = mc[i] / c[i]
+    np.savetxt(f"lab1/p_M_C_var{v}.csv", res, delimiter=";", fmt='%.2g')
+    return res
+
 def main():
     dir_name = "lab1/"
     test = os.listdir(dir_name)
@@ -43,10 +50,15 @@ def main():
         elif v == 13:
             prob = np.genfromtxt("lab1\csv\prob_13.csv", delimiter=',')
             table =  np.genfromtxt("lab1\csv\/table_13.csv", delimiter=',', dtype=int)
+            
         pc = p_C(v, prob, table)
         pmc = p_MC(v, prob, table)
+        pmc2 = p_M_C(v, pc, pmc.T)
         
         print(pc)
         print()
         print(pmc)
+        print()
+        print(pmc2)
+      
 main()
