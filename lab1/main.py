@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import sys
 
 vars = (6, 13)
 
@@ -66,12 +67,19 @@ def main():
     
     for v in vars:
         if v == 6:
-            prob = np.genfromtxt("lab1\csv\prob_06.csv", delimiter=',')
-            table =  np.genfromtxt("lab1\csv\/table_06.csv", delimiter=',', dtype=int)
+            if sys.platform == "linux":
+                prob = np.genfromtxt("lab1/csv/prob_06.csv", delimiter=',')
+                table =  np.genfromtxt("lab1/csv/table_06.csv", delimiter=',', dtype=int)
+            else:
+                prob = np.genfromtxt("lab1\csv\/prob_06.csv", delimiter=',')
+                table =  np.genfromtxt("lab1\csv\/table_06.csv", delimiter=',', dtype=int)
         elif v == 13:
-            prob = np.genfromtxt("lab1\csv\prob_13.csv", delimiter=',')
-            table =  np.genfromtxt("lab1\csv\/table_13.csv", delimiter=',', dtype=int)
-
+            if sys.platform == "linux":
+                prob = np.genfromtxt("lab1/csv/prob_13.csv", delimiter=',')
+                table =  np.genfromtxt("lab1/csv/table_13.csv", delimiter=',', dtype=int)
+            else:
+                prob = np.genfromtxt("lab1\csv\/prob_13.csv", delimiter=',')
+                table =  np.genfromtxt("lab1\csv\/table_13.csv", delimiter=',', dtype=int)
         pc = p_C(v, prob, table)        # P(C)
         pmc = p_MC(v, prob, table)      # Р(М, С)
         pmc2 = p_M_C(v, pc, pmc.T)      # P(M | C)
