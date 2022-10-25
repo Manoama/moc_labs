@@ -1,3 +1,4 @@
+from turtle import right
 import numpy as np
 import pandas as pd
 import os
@@ -5,7 +6,7 @@ import sys
 
 vars = (6, 13)
 
-def p_C(v, p, t):                                           # P(C)
+def p_C(v, p, t):                                                   # P(C)
     res = np.zeros(20)
     for i in range(20):
         for j in range(20):
@@ -15,7 +16,7 @@ def p_C(v, p, t):                                           # P(C)
     np.savetxt(f"lab1/p_C_var{v}.csv", tmp, delimiter=";", fmt='%.4g')
     return res
 
-def p_MC(v, p, t):                                          # Р(М, С)
+def p_MC(v, p, t):                                                  # Р(М, С)
     res = np.zeros((20, 20))
     _t = t.T
     for i in range(20):
@@ -25,14 +26,14 @@ def p_MC(v, p, t):                                          # Р(М, С)
     np.savetxt(f"lab1/p_MC_var{v}.csv", res, delimiter=";", fmt='%.4g')       
     return res
 
-def p_M_C(v, c, mc):                                        # P(M | C)
+def p_M_C(v, c, mc):                                                # P(M | C)
     res = np.empty((20, 20))
     for i in range(20):
         res[i] = mc[i] / c[i]
     np.savetxt(f"lab1/p_M_C_var{v}.csv", res, delimiter=";", fmt='%.4g')
     return res
 
-def opt_det(v, t):                                          # optimal deterministic solving function 
+def opt_det(v, t):                                                  # optimal deterministic solving function 
     res = np.arange(20, dtype = int)
     for i in range(20):
         maxx_i = np.where(t[i] == np.max(t[i]))[0]
@@ -44,7 +45,7 @@ def opt_det(v, t):                                          # optimal determinis
     np.savetxt(f"lab1/pdsf_var{v}.csv", res, delimiter=";", fmt='%d')
     return res    
     
-def opt_stoch(v, t):                                        # optimal stochastic solving function 
+def opt_stoch(v, t):                                                # optimal stochastic solving function 
     res = np.zeros((20, 20))
     for i in range(20):
         maxx_i = np.where(t[i] == np.max(t[i]))[0]
@@ -57,17 +58,35 @@ def opt_stoch(v, t):                                        # optimal stochastic
     np.savetxt(f"lab1/pssf_var{v}.csv", res, delimiter=";", fmt='%.2g')
     return res
 
-def det_losses(v, df, t, pmc):                                  # losses for deterministic objective function
+def det_losses(v, df, t, pmc):                                      # losses for deterministic solving function
     res = np.zeros((20, 20), dtype = int)
     df = df[1]
     for i in range(20):
         for j in range(20):
             if df[t[i][j]] != i:
                 res[t[i][j]][i] = 1
-    print(f'Mean losses for deterministic objective function (var {v}) = {np.sum(res * pmc):.4f}')
+    print(f'Mean losses for deterministic solving function (var {v}) = {np.sum(res * pmc):.4f}')
     np.savetxt(f"lab1/pdsf_losses_var{v}.csv", res, delimiter=";", fmt='%d')
-    return res
+    
 
+def stoch_losses(v, sf, t, pmc):                                    # losses for stochastic solving function
+    res = np.empty((20, 20))
+    r = np.arange(20, dtype = int)
+    for i in range(20):
+        for j in range(20):
+            left_slice = sf[i][:j]
+            right_slice = sf[i][j+1:]
+                
+            if left_slice.size == 0:
+                res[i][j] = np.sum(right_slice)
+            elif right_slice.size == 0:
+                res[i][j] = np.sum(left_slice)
+            else:
+                res[i][j] = np.sum(right_slice)
+                res[i][j] += np.sum(left_slice)
+    print(f'Mean losses for stochastic solving function (var {v}) = {np.sum(res * pmc):.4f}')
+    np.savetxt(f"lab1/pssf_losses_var{v}.csv", res, delimiter=";", fmt='%d')
+    
 
 def main():
     dir_name = "lab1/"
@@ -98,7 +117,7 @@ def main():
         pmc2 = p_M_C(v, pc, pmc)                    # P(M | C)
         pdsf = opt_det(v, pmc2)                     # optimal deterministic solving function 
         pssf = opt_stoch(v, pmc2)                   # optimal stochastic solving function 
-        dlosses = det_losses(v, pdsf, table, pmc)   # losses for deterministic objective function
-
+        det_losses(v, pdsf, table, pmc)             # losses for deterministic solving function
+        stoch_losses(v, pssf, table, pmc)           # losses for stochastic solving function
         
 main()
