@@ -1,6 +1,4 @@
-from turtle import right
 import numpy as np
-import pandas as pd
 import os
 import sys
 
@@ -10,19 +8,17 @@ def p_C(v, p, t):                                                   # P(C)
     res = np.zeros(20)
     for i in range(20):
         for j in range(20):
-            c = t[i][j]
-            res[c] += p[0][j]*p[1][i]
+            h = t[i][j]                                             # беремо індекс шифротексту з table_xx 
+            res[h] += p[0][j]*p[1][i]                               # P(C_h) += P(k_i)*P(M_i)
     tmp = np.resize(np.append(np.arange(20), res), (2, 20))
     np.savetxt(f"lab1/p_C_var{v}.csv", tmp, delimiter=";", fmt='%.4g')
     return res
 
 def p_MC(v, p, t):                                                  # Р(М, С)
     res = np.zeros((20, 20))
-    _t = t.T
     for i in range(20):
-        m_i = _t[i]
-        for ii in range(20):
-            res[m_i[ii]][i] += p[1][ii]*p[0][i]     
+        for j in range(20):
+            res[t[j][i]][i] += p[0][i]*p[1][j]                              # P(C_table_xx[j][i], M_i) += P(M_i)*P(k_j)
     np.savetxt(f"lab1/p_MC_var{v}.csv", res, delimiter=";", fmt='%.4g')       
     return res
 
@@ -34,21 +30,21 @@ def p_M_C(v, c, mc):                                                # P(M | C)
     return res
 
 def opt_det(v, t):                                                  # optimal deterministic solving function 
-    res = np.arange(20, dtype = int)
+    res = np.empty(0)
     for i in range(20):
-        maxx_i = np.where(t[i] == np.max(t[i]))[0]
-        if maxx_i.size > 1:
+        maxx_i = np.where(t[i] == np.max(t[i]))[0]                  # знаходимо індекси шифротексту, де рядок в P(M | C) має максимальні значення
+        if maxx_i.size > 1:                                         # якщо ідексів > 1, то беремо будь-який (в данній програмнній реалізації беремо тільки перший індекс)
             res = np.append(res, maxx_i[0])
         else:
             res = np.append(res, maxx_i)
-    res = np.resize(res, (2, 20))
-    np.savetxt(f"lab1/pdsf_var{v}.csv", res, delimiter=";", fmt='%d')
+    tmp = np.resize(np.append(np.arange(20), res), (2, 20))
+    np.savetxt(f"lab1/pdsf_var{v}.csv", tmp, delimiter=";", fmt='%d')
     return res    
     
 def opt_stoch(v, t):                                                # optimal stochastic solving function 
     res = np.zeros((20, 20))
     for i in range(20):
-        maxx_i = np.where(t[i] == np.max(t[i]))[0]
+        maxx_i = np.where(t[i] == np.max(t[i]))[0]                  # знаходимо індекси шифротексту, де рядок в P(M | C) має максимальні значення
         if maxx_i.size > 1:
             num = 1 / maxx_i.size
             for j in maxx_i:
@@ -60,7 +56,6 @@ def opt_stoch(v, t):                                                # optimal st
 
 def det_losses(v, df, t, pmc):                                      # losses for deterministic solving function
     res = np.zeros((20, 20), dtype = int)
-    df = df[1]
     for i in range(20):
         for j in range(20):
             if df[t[i][j]] != i:
