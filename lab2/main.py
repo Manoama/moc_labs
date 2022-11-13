@@ -1,3 +1,4 @@
+import numpy as np
 import re
 import string
 import os
@@ -14,9 +15,37 @@ def text_preprocessing(s):
     sNew = sNew.replace('ґ','г')
     return sNew
 
-# def frequency(n):
-#     if n == 1:
+def frequency(s, l, probability=False):
+    if l == 1:
+    # Монограми:
+        c = Counter(s)
+        if probability:
+            length = len(s)
+            for key, value in c.items():
+                c[key] = value / length
+            return c    
 
+        return c
+    if l == 2:
+    # Бiграми:
+        c = Counter(s[i : i + 2] for i in range(len(s) - 1))
+        if probability:
+            length = sum(c.values())
+            for key, value in c.items():
+                c[key] = value / length    
+            return c
+        return c
+    return "wrong input"
+
+def entropy(s, l):
+    H = 0
+    c = frequency(s, l, probability=True)
+    for p in c.values():
+        H += p * np.log2(p)
+    H = (H / l) * (-1)
+    return H
+
+        
 
 
 
@@ -31,21 +60,18 @@ def main():
         data = file.read()
         
         s = text_preprocessing(data)
+    
+    with open('lab2/newText.txt', 'w') as file:
+        file.write(s)
         
 # Частоти:
-    # Монограми:
-    length = len(s)
-    c = Counter(s)
-    for key, value in c.items():
-        c[key] = value / length    
+    monoFr = frequency(s, 1)
+    biFr = frequency(s, 2)
+# Ентропiя:
+    monoEn = entropy(s,1)
+    biEn = entropy(s,2)
 
-    print(c)
-    # Бiграми:
-    c = Counter(s[i : i + 2] for i in range(len(s) - 1))
-    for key, value in c.items():
-        c[key] = value / length    
-    
-    print(c)
-    
+   
+    exit()
 if __name__ == "__main__":
     main()
