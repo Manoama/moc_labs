@@ -45,7 +45,14 @@ def entropy(s, l):
     H = (H / l) * (-1)
     return H
 
-        
+def affinity(s,l):
+    I = 0
+    c = frequency(s,l)
+    L = sum(c.values())
+    for val in c.values():
+        I += val * (val - 1)
+    I /= L*(L-1)
+    return I
 
 
 
@@ -70,6 +77,15 @@ def main():
 # Ентропiя:
     monoEn = entropy(s,1)
     biEn = entropy(s,2)
+# Iндекс Вiдповiдностi:
+    monoAff = affinity(s,1)
+    biAff = affinity(s,2)
+
+    print(monoEn)
+    print(biEn)
+    print(monoAff)
+    print(biAff)
+
 
    
     exit()
