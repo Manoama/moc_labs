@@ -135,6 +135,31 @@ def dist_Affin(s,l,ukrDict,isText=False):
     else:
         return "Wrong input"
     
+def dist_Fibonacci(s, l, ukrDict, isText=False):
+    
+    Y = []
+    if l == 1:    
+        for i in range(2, len(s)):
+            s0 = ukrDict[s[i-1]]
+            s1 = ukrDict[s[i-2]]
+            y = int(np.mod(s0+s1, 32))
+            Y.append(y)
+        if isText:
+            yText = ''
+            for i in trange(len(Y)):
+                yText += get_key[0]
+            return yText
+        return Y
+    if l == 2:
+        for i in range(3, len(s)):
+            s0 = [ukrDict[s[i-1]], ukrDict[s[i-2]]]
+            s1 = [ukrDict[s[i-2]], ukrDict[s[i-3]]]
+            y = [s0[0]+s1[0], s1[0] + s1[1]]
+            y = [int(np.mod(y[0], 32)), int(np.mod(y[1], 32))]
+            Y.append(y)
+        return Y
+    else:
+        return "Wrong input"
 
 
 def main():
@@ -174,12 +199,22 @@ def main():
 
     X = get_N_texts(s, N=1000, L=1000)
     Y = []
+# (a)
     # r = 5
     # for i in trange(len(X)):
     #     Y.append(dist_Vigenere(X[i],r, ukrDict,isText=True))
 
+# (б)
+    # l = 2
+    # for i in trange(len(X)):
+    #     Y.append(dist_Affin(X[i],l,ukrDict))
+
+# (в) Рiвномiрно розподiлена послiдовнiсть символiв
+
+# (г)
+    l = 2
     for i in trange(len(X)):
-        Y.append(dist_Affin(X[i],2,ukrDict))
+        Y.append(dist_Fibonacci(X[i],l,ukrDict))
 
     
     exit()
