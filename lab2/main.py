@@ -212,11 +212,27 @@ def main():
 # (в) Рiвномiрно розподiлена послiдовнiсть символiв
 
 # (г)
-    l = 2
-    for i in trange(len(X)):
-        Y.append(dist_Fibonacci(X[i],l,ukrDict))
+    # l = 2
+    # for i in trange(len(X)):
+    #     Y.append(dist_Fibonacci(X[i],l,ukrDict))
 
-    
+# Критерiї:
+    h = 12
+    A = ["а","б", "в", "г", "д", "е", "є", "ж", "з", "и", "і", "ї", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ь", "ю", "я"]
+    A = A[:h]
+
+    # 2.0:
+    H1 = 0
+    H0 = 0
+    for x in X:
+        for a in A: 
+            if a in x:
+                H0 += 1
+            else:
+                H1 += 1
+    print(f'H1 = {H1},    H0 = {H0}')
+
+
     exit()
 
 
