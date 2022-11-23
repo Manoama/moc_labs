@@ -203,15 +203,27 @@ def criteria_2_3(Afrq, x, K):
     return 1      
 
 def criteria_4_0(x, sAff, k):    
-    # xFreq = frequency(x,1,probability=True)
-    # for key, val in sFreq.items():
-    #     if key not in xFreq.keys():
-    #         xFreq[key] = 0
     xAff = affinity(x,1)
-    if abs(xAff - sAff) > 0.001:
+    if abs(xAff - sAff) > k:
         return 0
     return 1
 
+def criteria_5_0(x, sFreq, k):
+    j = 7
+    Bprh = list(sFreq.keys())[-j:]
+    boxes = {}
+    for b in Bprh:
+        boxes[b] = 0
+    for a in x:
+        if a in boxes:
+            boxes[a] += 1
+    f = 0
+    for val in boxes.values():
+        if val == 0:
+            f += 1
+    if f < k:
+        return 0 
+    return 1
 
 
 
@@ -319,13 +331,25 @@ def main():
     # FP /= 2*N
     # FN /= 2*N   
     
+    # FP = 0
+    # FN = 0
+    # sAff = affinity(s,1)
+    # k = 0.001
+    # for x in X:
+    #     FP += 1 - criteria_4_0(x, sAff, k)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_4_0(x, sAff, k)
+    # FP /= 2*N
+    # FN /= 2*N 
+
     FP = 0
     FN = 0
-    sAff = affinity(s,1)
+    k = 2
+    sFreq = frequency(s,1,probability=True)
     for x in X:
-        FP += 1 - criteria_4_0(x, sAff, k=5)
+        FP += 1 - criteria_5_0(x, sFreq, k)
         x = dist_Vigenere(x,5,ukrDict,isText=True)
-        FN += criteria_4_0(x, sAff, k=5)
+        FN += criteria_5_0(x, sFreq, k)
     FP /= 2*N
     FN /= 2*N  
 
