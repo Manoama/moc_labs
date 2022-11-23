@@ -54,7 +54,10 @@ def affinity(s,l):
     L = sum(c.values())
     for val in c.values():
         I += val * (val - 1)
-    I /= L*(L-1)
+    try:
+        I /= L*(L-1)
+    except:
+        I = 0
     return I
 
 def get_key(val,dict):
@@ -73,7 +76,7 @@ def get_N_texts(s, N, L):
     for i in range(N):
         f = s[j:j+L]
         xTexts.append(f)
-        j += 100
+        j += 10
     
     return xTexts
 
@@ -167,8 +170,8 @@ def criteria_2_0(Afrq,x):
     flag=True
     for a in Afrq: 
         if a not in x:
-            return "H1" # у текстi x якоiсь монограми нема 
-    return "H0" # у текстi x присутнi всi монограми
+            return 0 # H1 # у текстi x якоiсь монограми нема 
+    return 1 # H0 # у текстi x присутнi всi монограми
 
 def criteria_2_1(Afrq, x, k):
     Aaf = []
@@ -177,8 +180,8 @@ def criteria_2_1(Afrq, x, k):
             Aaf.append(a)
     count = len(set(Afrq).intersection(Aaf))
     if count <= k:
-        return "H1"
-    return "H0"
+        return 0
+    return 1
 
 def criteria_2_2(Afrq, x, sFreq):
     xFreq = frequency(x,1,probability=True)
@@ -188,11 +191,26 @@ def criteria_2_2(Afrq, x, sFreq):
             f = xFreq[a]    
         k = sFreq[a]
         if f < k:
-            return "H1"
-    return "H0"
+            return 0
+    return 1
 
+def criteria_2_3(Afrq, x, K):
+    xFreq = frequency(x,1,probability=True)
+    F = sum(xFreq.values())
+    F = round(F, 6)
+    if F < K:
+        return 0
+    return 1      
 
-
+def criteria_4_0(x, sAff, k):    
+    # xFreq = frequency(x,1,probability=True)
+    # for key, val in sFreq.items():
+    #     if key not in xFreq.keys():
+    #         xFreq[key] = 0
+    xAff = affinity(x,1)
+    if abs(xAff - sAff) > 0.001:
+        return 0
+    return 1
 
 
 
@@ -216,8 +234,8 @@ def main():
     #     file.write(s)
     
     s = ''
-    with open('newText.txt', 'r') as file:
-        s = file.read(700_000)
+    with open('lab2/newText.txt', 'r') as file:
+        s = file.read(900_000)
 # # Частоти:
 #     monoFr = frequency(s, 1)
 #     biFr = frequency(s, 2)
@@ -236,8 +254,8 @@ def main():
     ukrDict = {}
     with open('lab2/ukrAlphabeticNumbered.json') as json_file:
         ukrDict = json.load(json_file)
-
-    X = get_N_texts(s, N=10_000, L=100)
+    N, L = 10_000, 1000
+    X = get_N_texts(s, N, L)
     Y = []
 # (a)
     # r = 5
@@ -258,33 +276,58 @@ def main():
 
 # Критерiї:
     h = 11
-    A = frequency(s,1)
-    Afrq = list(A.keys())[:h]
+    A = frequency(s,1,probability=True)
+    Afrq = list(A.keys())[:h] # самые частые l-граммы
 
-    dict_2_0 = {}
-    for x in X:
-        res = criteria_2_0(Afrq, x)
-        if res not in dict_2_0.keys():
-            dict_2_0[res] = 1
-        dict_2_0[res] += 1
-    
-    dict_2_1 = {}
-    for x in X:
-        res = criteria_2_1(Afrq, x,k=h-3)
-        if res not in dict_2_1.keys():
-            dict_2_1[res] = 1
-        dict_2_1[res] += 1
+    # FP = 0 # False Positive
+    # FN = 0 # False Negative
+    # for x in X:
+    #     FP += 1 - criteria_2_0(Afrq, x)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_0(Afrq,x)
+    # FP /= 2*N
+    # FN /= 2*N
 
-    dict_2_2 = {}
-    sFreq = frequency(s,1,probability=True)
-    for x in X:
-        res = criteria_2_2(Afrq, x,sFreq)
-        if res not in dict_2_2.keys():
-            dict_2_2[res] = 1
-        dict_2_2[res] += 1
-    
-    
+    # FP = 0
+    # FN = 0
+    # for x in X:
+    #     FP += 1 - criteria_2_1(Afrq, x, k=h-3)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_1(Afrq,x, k=h-3)
+    # FP /= 2*N
+    # FN /= 2*N
 
+    # FP = 0
+    # FN = 0
+    # sFreq = frequency(s,1,probability=True)
+    # for x in X:
+    #     FP += 1 - criteria_2_2(Afrq, x, sFreq)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_2(Afrq, x, sFreq)
+    # FP /= 2*N
+    # FN /= 2*N    
+    
+    # FP = 0
+    # FN = 0
+    # sFreq = frequency(s,1,probability=True)
+    # print(sFreq.keys())
+    # K = round(sum(sFreq.values()), 6)
+    # for x in X:
+    #     FP += 1 - criteria_2_3(Afrq, x, K)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_3(Afrq, x, K)
+    # FP /= 2*N
+    # FN /= 2*N   
+    
+    FP = 0
+    FN = 0
+    sAff = affinity(s,1)
+    for x in X:
+        FP += 1 - criteria_4_0(x, sAff, k=5)
+        x = dist_Vigenere(x,5,ukrDict,isText=True)
+        FN += criteria_4_0(x, sAff, k=5)
+    FP /= 2*N
+    FN /= 2*N  
 
     exit()
 
