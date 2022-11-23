@@ -26,9 +26,9 @@ def frequency(s, l, probability=False):
             length = len(s)
             for key, value in c.items():
                 c[key] = value / length
-            return c    
+            return {k: v for k, v in sorted(c.items(), key=lambda item: item[1], reverse=True)}    
 
-        return c
+        return {k: v for k, v in sorted(c.items(), key=lambda item: item[1], reverse=True)}
     if l == 2:
     # Бiграми:
         c = Counter(s[i : i + 2] for i in range(len(s) - 1))
@@ -36,8 +36,8 @@ def frequency(s, l, probability=False):
             length = sum(c.values())
             for key, value in c.items():
                 c[key] = value / length    
-            return c
-        return c
+            return {k: v for k, v in sorted(c.items(), key=lambda item: item[1], reverse=True)}
+        return {k: v for k, v in sorted(c.items(), key=lambda item: item[1], reverse=True)}
     return "wrong input"
 
 def entropy(s, l):
@@ -134,7 +134,8 @@ def dist_Affin(s,l,ukrDict,isText=False):
         return Y
     else:
         return "Wrong input"
-    
+
+# Спотворення тексту (г) Фiббоначчi:
 def dist_Fibonacci(s, l, ukrDict, isText=False):
     
     Y = []
@@ -162,6 +163,45 @@ def dist_Fibonacci(s, l, ukrDict, isText=False):
         return "Wrong input"
 
 
+def criteria_2_0(Afrq,x):
+    flag=True
+    for a in Afrq: 
+        if a not in x:
+            return "H1" # у текстi x якоiсь монограми нема 
+    return "H0" # у текстi x присутнi всi монограми
+
+def criteria_2_1(Afrq, x, k):
+    Aaf = []
+    for a in Afrq:
+        if a in x:
+            Aaf.append(a)
+    count = len(set(Afrq).intersection(Aaf))
+    if count <= k:
+        return "H1"
+    return "H0"
+
+def criteria_2_2(Afrq, x, sFreq):
+    xFreq = frequency(x,1,probability=True)
+    for a in Afrq:
+        f = 0
+        if a in xFreq.keys():
+            f = xFreq[a]    
+        k = sFreq[a]
+        if f < k:
+            return "H1"
+    return "H0"
+
+
+
+
+
+
+
+
+
+
+
+
 def main():
 
 # Опрацювання тексту:
@@ -176,7 +216,7 @@ def main():
     #     file.write(s)
     
     s = ''
-    with open('lab2/newText.txt', 'r') as file:
+    with open('newText.txt', 'r') as file:
         s = file.read(700_000)
 # # Частоти:
 #     monoFr = frequency(s, 1)
@@ -197,7 +237,7 @@ def main():
     with open('lab2/ukrAlphabeticNumbered.json') as json_file:
         ukrDict = json.load(json_file)
 
-    X = get_N_texts(s, N=1000, L=1000)
+    X = get_N_texts(s, N=10_000, L=100)
     Y = []
 # (a)
     # r = 5
@@ -217,20 +257,33 @@ def main():
     #     Y.append(dist_Fibonacci(X[i],l,ukrDict))
 
 # Критерiї:
-    h = 12
-    A = ["а","б", "в", "г", "д", "е", "є", "ж", "з", "и", "і", "ї", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ь", "ю", "я"]
-    A = A[:h]
+    h = 11
+    A = frequency(s,1)
+    Afrq = list(A.keys())[:h]
 
-    # 2.0:
-    H1 = 0
-    H0 = 0
+    dict_2_0 = {}
     for x in X:
-        for a in A: 
-            if a in x:
-                H0 += 1
-            else:
-                H1 += 1
-    print(f'H1 = {H1},    H0 = {H0}')
+        res = criteria_2_0(Afrq, x)
+        if res not in dict_2_0.keys():
+            dict_2_0[res] = 1
+        dict_2_0[res] += 1
+    
+    dict_2_1 = {}
+    for x in X:
+        res = criteria_2_1(Afrq, x,k=h-3)
+        if res not in dict_2_1.keys():
+            dict_2_1[res] = 1
+        dict_2_1[res] += 1
+
+    dict_2_2 = {}
+    sFreq = frequency(s,1,probability=True)
+    for x in X:
+        res = criteria_2_2(Afrq, x,sFreq)
+        if res not in dict_2_2.keys():
+            dict_2_2[res] = 1
+        dict_2_2[res] += 1
+    
+    
 
 
     exit()
