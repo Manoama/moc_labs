@@ -88,7 +88,7 @@ def dist_Vigenere(s,r,ukrDict,isText=False):
 
     Y = []    
     for i in range(len(s)):
-        Y.append(np.mod(ukrDict[s[i]]+Key[np.mod(i, 1)],32))
+        Y.append(np.mod(ukrDict[s[i]]+Key[np.mod(i, r)],32))
 
     if isText:
         yText = ''
@@ -184,7 +184,7 @@ def criteria_2_1(Afrq, x, k):
     return 1
 
 def criteria_2_2(Afrq, x, sFreq):
-    xFreq = frequency(x,1,probability=True)
+    xFreq = frequency(x,2,probability=True)
     for a in Afrq:
         f = 0
         if a in xFreq.keys():
@@ -195,7 +195,7 @@ def criteria_2_2(Afrq, x, sFreq):
     return 1
 
 def criteria_2_3(Afrq, x, K):
-    xFreq = frequency(x,1,probability=True)
+    xFreq = frequency(x,2,probability=True)
     F = sum(xFreq.values())
     F = round(F, 6)
     if F < K:
@@ -203,7 +203,7 @@ def criteria_2_3(Afrq, x, K):
     return 1      
 
 def criteria_4_0(x, sAff, k):    
-    xAff = affinity(x,1)
+    xAff = affinity(x,2)
     if abs(xAff - sAff) > k:
         return 0
     return 1
@@ -224,6 +224,11 @@ def criteria_5_0(x, sFreq, k):
     if f < k:
         return 0 
     return 1
+
+
+# def criteria_2_0(Afrq, x):
+#     for a in Afrq:
+#         if a not in x:
 
 
 
@@ -281,15 +286,16 @@ def main():
 
 # (в) Рiвномiрно розподiлена послiдовнiсть символiв
 
+
 # (г)
     # l = 2
     # for i in trange(len(X)):
     #     Y.append(dist_Fibonacci(X[i],l,ukrDict))
 
 # Критерiї:
-    h = 11
-    A = frequency(s,1,probability=True)
-    Afrq = list(A.keys())[:h] # самые частые l-граммы
+    # h = 11
+    # A = frequency(s,1,probability=True)
+    # Afrq = list(A.keys())[:h] # самые частые l-граммы
 
     # FP = 0 # False Positive
     # FN = 0 # False Negative
@@ -342,16 +348,78 @@ def main():
     # FP /= 2*N
     # FN /= 2*N 
 
-    FP = 0
-    FN = 0
-    k = 2
-    sFreq = frequency(s,1,probability=True)
-    for x in X:
-        FP += 1 - criteria_5_0(x, sFreq, k)
-        x = dist_Vigenere(x,5,ukrDict,isText=True)
-        FN += criteria_5_0(x, sFreq, k)
-    FP /= 2*N
-    FN /= 2*N  
+    # FP = 0
+    # FN = 0
+    # k = 2
+    # sFreq = frequency(s,1,probability=True)
+    # for x in X:
+    #     FP += 1 - criteria_5_0(x, sFreq, k)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_5_0(x, sFreq, k)
+    # FP /= 2*N
+    # FN /= 2*N  
+
+
+#############################################################
+
+    # ukrBigrams = {}
+    # j = 0
+    # for k1 in ukrDict.keys():
+    #     for k2 in ukrDict.keys():
+    #         ukrBigrams[f'{k1}{k2}'] = j
+    #         j += 1
+
+    # h = 100
+    # A = frequency(s,2,probability=True)
+    # Afrq = list(A.keys())[:h] # самые частые l-граммы
+    
+    # FP = 0 # False Positive
+    # FN = 0 # False Negative
+    # for x in X:
+    #     FP += 1 - criteria_2_0(Afrq, x)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_0(Afrq,x)
+    # FP /= 2*N
+    # FN /= 2*N
+    
+    # FP = 0
+    # FN = 0
+    # for x in X:
+    #     FP += 1 - criteria_2_1(Afrq, x, k=h-10)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_1(Afrq,x, k=h-10)
+    # FP /= 2*N
+    # FN /= 2*N
+
+    # FP = 0
+    # FN = 0
+    # sFreq = frequency(s,2,probability=True)
+    # for x in X:
+    #     FP += 1 - criteria_2_2(Afrq, x, sFreq)
+    #     x = dist_Vigenere(x,5,ukrDict,isText=True)
+    #     FN += criteria_2_2(Afrq, x, sFreq)
+    # FP /= 2*N
+    # FN /= 2*N
+
+
+#####################################################
+# Згенерировать случ. текст (несвязный)
+    h = 11
+    A = frequency(s,1,probability=True)
+    Afrq = list(A.keys())[:h] # самые частые l-граммы
+    L = 10_000
+    X = ''
+    j = random.randint(0,33)
+    for i in range(L):
+        X += list(ukrDict.keys())[j]
+    
+    X = dist_Vigenere(X, 10,ukrDict, isText=True)
+    res = criteria_2_0(Afrq, X)
+    
+
+    
+        
+
 
     exit()
 
