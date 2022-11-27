@@ -1,0 +1,15 @@
+l = 
+    1. Criteria 2.0
+    2. Criteria 2.1
+    3. Criteria 2.2
+    4. Criteria 2.3
+    5. Criteria 4.0
+    6. Criteria 5.0 
+    
+Criteria = 
+    1. Vigenere
+    2. Affinity
+    3. Uniform
+    4. Fibonacci
+    
+Distortion = r = 

@@ -82,8 +82,7 @@ def get_N_texts(s, N, L):
 
 # Спотворення тексту (а) Вiженер:
 def dist_Vigenere(s,r,ukrDict,isText=False):
-    r = 5
-    Key = random.sample(range(1,33), r)
+    Key = random.sample(range(0,31), r)
 
 
     Y = []    
@@ -102,7 +101,7 @@ def dist_Vigenere(s,r,ukrDict,isText=False):
 def dist_Affin(s,l,ukrDict,isText=False):
 
     if l == 1:
-        Keys = random.sample(range(1,33), 2)
+        Keys = random.sample(range(0,31), 2)
 
         Y = []    
         for i in range(len(s)):
@@ -112,15 +111,15 @@ def dist_Affin(s,l,ukrDict,isText=False):
             Y.append(x)
         if isText:
             yText = ''
-            for i in trange(len(Y)):
+            for i in range(len(Y)):
                 yText += get_key(Y[i], ukrDict)
             return yText
         return Y
 
     elif l == 2:
         Keys = []
-        Keys.append(random.sample(range(1,33), 2))
-        Keys.append(random.sample(range(1,33), 2))
+        Keys.append(random.sample(range(0,31), 2))
+        Keys.append(random.sample(range(0,31), 2))
         Y = []
         for i in range(len(s)-1):
             x = s[i:i+2]
@@ -131,12 +130,26 @@ def dist_Affin(s,l,ukrDict,isText=False):
             Y.append(y)             
         if isText:
             yText = ''
-            for i in trange(len(Y)):
+            for i in range(len(Y)):
                 yText += get_key[0]
             return yText
         return Y
     else:
         return "Wrong input"
+
+
+def dist_Uni(s, ukrDict, isText=False):
+    Y = []
+
+    for i in range(len(s)):
+        y = random.randint(0,31)
+        Y.append(y)
+    if isText:
+        yText = ''
+        for i in range(len(Y)):
+            yText += get_key(Y[i], ukrDict)
+        return yText
+    return Y        
 
 # Спотворення тексту (г) Фiббоначчi:
 def dist_Fibonacci(s, l, ukrDict, isText=False):
@@ -150,8 +163,8 @@ def dist_Fibonacci(s, l, ukrDict, isText=False):
             Y.append(y)
         if isText:
             yText = ''
-            for i in trange(len(Y)):
-                yText += get_key[0]
+            for i in range(len(Y)):
+                yText += get_key(Y[i], ukrDict)
             return yText
         return Y
     if l == 2:
@@ -250,9 +263,7 @@ def main():
     # with open('lab2/newText.txt', 'w') as file:
     #     file.write(s)
     
-    s = ''
-    with open('lab2/newText.txt', 'r') as file:
-        s = file.read(900_000)
+    
 # # Частоти:
 #     monoFr = frequency(s, 1)
 #     biFr = frequency(s, 2)
@@ -268,12 +279,7 @@ def main():
 #     print(biAff)    
 
 
-    ukrDict = {}
-    with open('lab2/ukrAlphabeticNumbered.json') as json_file:
-        ukrDict = json.load(json_file)
-    N, L = 10_000, 1000
-    X = get_N_texts(s, N, L)
-    Y = []
+    
 # (a)
     # r = 5
     # for i in trange(len(X)):
@@ -404,23 +410,213 @@ def main():
 
 #####################################################
 # Згенерировать случ. текст (несвязный)
-    h = 11
-    A = frequency(s,1,probability=True)
-    Afrq = list(A.keys())[:h] # самые частые l-граммы
-    L = 10_000
-    X = ''
-    j = random.randint(0,33)
-    for i in range(L):
-        X += list(ukrDict.keys())[j]
+    # h = 11
+    # A = frequency(s,1,probability=True)
+    # Afrq = list(A.keys())[:h] # самые частые l-граммы
+    # L = 10_000
+    # X = ''
+    # j = random.randint(0,31)
+    # for i in range(L):
+    #     X += list(ukrDict.keys())[j]
     
-    X = dist_Vigenere(X, 10,ukrDict, isText=True)
-    res = criteria_2_0(Afrq, X)
+    # X = dist_Vigenere(X, 10,ukrDict, isText=True)
+    # res = criteria_2_0(Afrq, X)
     
+
+############################################################################################
+# ############################################################################################
+# ############################################################################################
+# ############################################################################################
+# ############################################################################################
+
+    # Читаем текст
+    s = ''
+    with open('lab2/newText.txt', 'r') as file:
+        s = file.read(900_000)
+
+    # Словарь: {"а": 0, ..., "я": 32}
+    ukrDict = {}
+    with open('lab2/ukrAlphabeticNumbered.json') as json_file:
+        ukrDict = json.load(json_file)
+    
+    # N текстов длины L 
+    N, L = 10_000, 1000
+    X = get_N_texts(s, N, L)
+
+    
+    l = int(input('l = ')) 
+
+    chCriteria = int(input("""
+    1. Criteria 2.0
+    2. Criteria 2.1
+    3. Criteria 2.2
+    4. Criteria 2.3
+    5. Criteria 4.0
+    6. Criteria 5.0 
+    
+Criteria = """))
+
+    chDistortion = int(input("""
+    1. Vigenere
+    2. Affinity
+    3. Uniform
+    4. Fibonacci
+    
+Distortion = """))
+    # l = 1
+    # chCriteria = 1
+    # chDistortion = 1
+
+    if l == 1:
+        h = 9
+        if chCriteria == 1:
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+        if chCriteria == 2:
+            k = h-3
+            if chDistortion == 1:
+    
+                h = 9
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                h = 9
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                h = 9
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                h = 9
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+
+
+
 
     
         
 
-
+    print('___________________________________________________')
+    print('')
+    print('')
     exit()
 
 
