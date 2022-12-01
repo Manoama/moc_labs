@@ -7,6 +7,8 @@ import json
 import numpy as np
 import random
 from tqdm import trange
+import deflate
+
 
 
 def text_preprocessing(s):
@@ -99,7 +101,7 @@ def dist_Vigenere(s,r,ukrDict,isText=False):
 
 # Спотворення тексту (б) Афiнна Пiдстановка:
 def dist_Affin(s,l,ukrDict,isText=False):
-
+    l=1
     if l == 1:
         Keys = random.sample(range(0,31), 2)
 
@@ -131,6 +133,7 @@ def dist_Affin(s,l,ukrDict,isText=False):
         if isText:
             yText = ''
             for i in range(len(Y)):
+                
                 yText += get_key[0]
             return yText
         return Y
@@ -153,7 +156,7 @@ def dist_Uni(s, ukrDict, isText=False):
 
 # Спотворення тексту (г) Фiббоначчi:
 def dist_Fibonacci(s, l, ukrDict, isText=False):
-    
+    l=1
     Y = []
     if l == 1:    
         for i in range(2, len(s)):
@@ -196,8 +199,8 @@ def criteria_2_1(Afrq, x, k):
         return 0
     return 1
 
-def criteria_2_2(Afrq, x, sFreq):
-    xFreq = frequency(x,2,probability=True)
+def criteria_2_2(Afrq, x, l, sFreq):
+    xFreq = frequency(x,l,probability=True)
     for a in Afrq:
         f = 0
         if a in xFreq.keys():
@@ -207,22 +210,22 @@ def criteria_2_2(Afrq, x, sFreq):
             return 0
     return 1
 
-def criteria_2_3(Afrq, x, K):
-    xFreq = frequency(x,2,probability=True)
+def criteria_2_3(Afrq, x, l, K):
+    xFreq = frequency(x,l,probability=True)
     F = sum(xFreq.values())
     F = round(F, 6)
     if F < K:
         return 0
     return 1      
 
-def criteria_4_0(x, sAff, k):    
-    xAff = affinity(x,2)
+def criteria_4_0(x, l, sAff, k):    
+    xAff = affinity(x,l)
     if abs(xAff - sAff) > k:
         return 0
     return 1
 
-def criteria_5_0(x, sFreq, k):
-    j = 7
+def criteria_5_0(x, sFreq, k, j):
+    # j = 7
     Bprh = list(sFreq.keys())[-j:]
     boxes = {}
     for b in Bprh:
@@ -440,7 +443,7 @@ def main():
         ukrDict = json.load(json_file)
     
     # N текстов длины L 
-    N, L = 10_000, 1000
+    N, L = 1000, 10_000
     X = get_N_texts(s, N, L)
 
     
@@ -468,7 +471,8 @@ Distortion = """))
     # chDistortion = 1
 
     if l == 1:
-        h = 9
+        
+        h = 10
         if chCriteria == 1:
             if chDistortion == 1:
     
@@ -539,7 +543,6 @@ Distortion = """))
             k = h-3
             if chDistortion == 1:
     
-                h = 9
                 A = frequency(s,l,probability=True)
                 Afrq = list(A.keys())[:h] # самые частые l-граммы
 
@@ -557,7 +560,6 @@ Distortion = """))
             
             if chDistortion == 2:
 
-                h = 9
                 A = frequency(s,l,probability=True)
                 Afrq = list(A.keys())[:h] # самые частые l-граммы
 
@@ -574,7 +576,6 @@ Distortion = """))
             
             if chDistortion == 3:
 
-                h = 9
                 A = frequency(s,l,probability=True)
                 Afrq = list(A.keys())[:h] # самые частые l-граммы
 
@@ -592,7 +593,6 @@ Distortion = """))
 
             if chDistortion == 4:
 
-                h = 9
                 A = frequency(s,l,probability=True)
                 Afrq = list(A.keys())[:h] # самые частые l-граммы
 
@@ -606,16 +606,661 @@ Distortion = """))
                 FN /= 2*N
                 print(f'False Positive = {FP}')
                 print(f'False Negative = {FN}')
-
-
-
-
-
+        if chCriteria == 3:
+            sFreq = frequency(s,l,probability=True)
+            if chDistortion == 1:
     
-        
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')            
+        if chCriteria == 4:
+            sFreq = frequency(s,l,probability=True)
+            K = round(sum(sFreq.values()), 6)
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}') 
+        if chCriteria == 5:
+            sAff = affinity(s,l)
+            k = 0.001
+            if chDistortion == 1:
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+        if chCriteria == 6:
+            k = 2
+            j = 7
+            sFreq = frequency(s,1,probability=True)
+            if chDistortion == 1:
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+               
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+    if l == 2:
+        ukrBigrams = {}
+        j = 0
+        for k1 in ukrDict.keys():
+            for k2 in ukrDict.keys():
+                ukrBigrams[f'{k1}{k2}'] = j
+                j += 1
+        h = 50
+        if chCriteria == 1:
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_0(Afrq, x)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_0(Afrq,x)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+        if chCriteria == 2:
+            k = h-20
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Ph = ositive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_1(Afrq, x, k)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_1(Afrq, x, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+        if chCriteria == 3:
+            sFreq = frequency(s,l,probability=True)
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_2(Afrq, x, l, sFreq)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_2(Afrq, x, l, sFreq)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')            
+        if chCriteria == 4:
+            sFreq = frequency(s,l,probability=True)
+            K = round(sum(sFreq.values()), 6)
+            if chDistortion == 1:
+    
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                A = frequency(s,l,probability=True)
+                Afrq = list(A.keys())[:h] # самые частые l-граммы
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_2_3(Afrq, x, l, K)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_2_3(Afrq, x, l, K)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}') 
+        if chCriteria == 5:
+            sAff = affinity(s,l)
+            k = 0.001
+            if chDistortion == 1:
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_4_0(x, l, sAff, k)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_4_0(x, l, sAff, k)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+        if chCriteria == 6:
+            k = 50
+            j = 100
+            sFreq = frequency(s,l,probability=True)
+            if chDistortion == 1:
+
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                r = int(input('r = '))
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Vigenere(x,r,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 2:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Affin(x,l,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+            
+            if chDistortion == 3:
+
+                
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Uni(x,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+
+            if chDistortion == 4:
+
+               
+                FP = 0 # False Positive
+                FN = 0 # False Negative
+                for x in X:
+                    FP += 1 - criteria_5_0(x, sFreq, k, j)
+                    x = dist_Fibonacci(x,l,ukrDict,isText=True)
+                    FN += criteria_5_0(x, sFreq, k, j)
+                FP /= 2*N
+                FN /= 2*N
+                print(f'False Positive = {FP}')
+                print(f'False Negative = {FN}')
+    
 
     print('___________________________________________________')
-    print('')
     print('')
     exit()
 
