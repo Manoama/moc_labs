@@ -2,8 +2,9 @@ import gmpy2
 from config import *
 from functools import wraps
 import time
- 
- 
+
+gmpy2.get_context().precision=2048
+
 def egcd(a, b):
     '''
     Розширений евклідів gcd. Повертає g,x,y такі, що ax+by=g=gcd(a,b)
@@ -48,7 +49,7 @@ def chinese_remainder(ds, rs):
 
 def hastad(cs, ns, e):
     crt = chinese_remainder(ns, cs)
-    r00t = gmpy2.root(crt, e)
+    r00t = int(gmpy2.root(crt, e))
     if r00t:
         return r00t
     else:
