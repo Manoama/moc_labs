@@ -2,9 +2,11 @@ import gmpy2
 from config import *
 from functools import wraps
 import time
+from multiprocessing import Pool
+import sys
 
 gmpy2.get_context().precision=2048
-
+sys.setrecursionlimit(1000000000)
 def egcd(a, b):
     '''
     Розширений евклідів gcd. Повертає g,x,y такі, що ax+by=g=gcd(a,b)
@@ -63,7 +65,8 @@ def timeit(func):
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         total_time = end_time - start_time
-        print(f'Час виконання функції {func.__name__}({args[0]}) в секундах становить {total_time:.4f} секунд.')
+        
+        print(f'Час виконання функції {func.__name__}({args}) в секундах становить {total_time:.4f} секунд.')
         return result
     return timeit_wrapper
 
@@ -92,3 +95,28 @@ def file_reader():
                     FILE[k1][k2]['n'] = res[1]
 
     return FILE
+
+def calc_range_window(range_start, range_end, step):
+    start = range_start
+    while start < range_end:
+        end = start + step
+        if end > range_end:
+            end = range_end
+        yield start, end
+        start = end + 1
+
+def some_magic(e, l, n, step_size=1000,  processes = 2):
+    pool = Pool(processes=processes)
+    sub_processes = []
+    for start, end in calc_range_window(1, 2**(l//2), step_size):
+        r = pool.apply_async(x_gen, [e, n, start, end])
+        sub_processes.append(r)
+        yield r.get()
+    pool.close()
+    pool.join()
+
+def x_gen(e, n, start, end):
+    x = [(i, i**e % n) for i in range(start, end+1)]
+    return x
+
+
