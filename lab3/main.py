@@ -28,7 +28,7 @@ def meet_in_the_middle_attack(l, difficulty, processes, step_size):
         cs = c*modInv(i[1], n) % n
         for j in x:
             if cs == j[1]:
-                print(hex(j[1]*i[1]))
+                print(hex(i[0] * j[0]))
                 break_out_flag = True
                 break
         if break_out_flag:
@@ -51,7 +51,7 @@ def main():
         attack_with_small_exponent(key)
   
     for key in FILES_CONTENT['mitm'].keys():
-        if key == 'bonus':
+        if key == 'bonus':    
             meet_in_the_middle_attack(56, key, args.processes, args.step_size)
         else:
             meet_in_the_middle_attack(20, key, args.processes, args.step_size)

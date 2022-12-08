@@ -49,9 +49,13 @@ def chinese_remainder(ds, rs):
         s += (rs[i] * modInv(p, ds[i]) * p)
     return s % prod
 
+def get_root(a, n):
+    r00t = int(gmpy2.root(a, n))
+    return r00t
+    
 def hastad(cs, ns, e):
     crt = chinese_remainder(ns, cs)
-    r00t = int(gmpy2.root(crt, e))
+    r00t = get_root(crt, e)
     if r00t:
         return r00t
     else:

@@ -1,5 +1,3 @@
-# var = input('Введіть номер варіанта: ')
-
 var = '13'
 
 if var < '10':
@@ -13,8 +11,8 @@ PATH = {
         },
     'mitm' : 
         {
-            'bonus' : f"lab3\MitM_vars\/bonus_MitM_RSA_2048_56_hard\{var}.txt",
             'regular' : f"lab3\MitM_vars\MitM_RSA_2048_20_regular\{var}.txt",
-            'test' : f"lab3\MitM_vars\/test_MitM_RSA_512_20_for_dummy_dummies\{var}.txt"
+            'test' : f"lab3\MitM_vars\/test_MitM_RSA_512_20_for_dummy_dummies\{var}.txt",
+            'bonus' : f"lab3\MitM_vars\/bonus_MitM_RSA_2048_56_hard\{var}.txt"
         }
 }
