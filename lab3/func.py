@@ -1,58 +1,78 @@
 import gmpy2
+import pickle
 from config import *
 from functools import wraps
 import time
 from multiprocessing import Pool
 import sys
+import numpy as np
 
-gmpy2.get_context().precision=2048
+gmpy2.get_context().precision = 2048
 sys.setrecursionlimit(1000000000)
-def egcd(a, b):
-    '''
-    Розширений евклідів gcd. Повертає g,x,y такі, що ax+by=g=gcd(a,b)
-    '''
-    if a == 0: 
-        return (b, 0, 1)
-    else:
-        g, y, x = egcd(b%a, a)
-        return (g, x-(b//a)*y, y)
 
-def modInv(a, m):
-    '''
+
+class Singleton(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls, *args, **kwargs)
+        return cls._instance
+
+
+class Config(Singleton):
+    precalculated_dir: Path
+
+
+def egcd(a, b):
+    """
+    Розширений евклідів gcd. Повертає g,x,y такі, що ax+by=g=gcd(a,b)
+    """
+    if a == 0:
+        return b, 0, 1
+    else:
+        g, y, x = egcd(b % a, a)
+        return g, x - (b // a) * y, y
+
+
+def mod_inv(a, m):
+    """
     Повертає r таке, що a*r mod m = 1.
-    '''
+    """
     g, x, y = egcd(a, m)
     if g != 1:
         return None
     else:
         return x % m
- 
- 
+
+
 def chinese_remainder(ds, rs):
-    '''
+    """
     Китайська теорема про залишок
     ds: масив дільників
     rs: масив остач
     Повертає число s таке, що s mod ds[i] = rs[i]
-    '''
+    """
     length = len(ds)
     if not length == len(rs):
         print("Довжина обох повинна бути однаковою")
         return None
 
-    prod = 1 
+    prod = 1
     s = 0
     for i in range(length):
         prod *= ds[i]
     for i in range(length):
         p = prod // ds[i]
-        s += (rs[i] * modInv(p, ds[i]) * p)
+        s += rs[i] * mod_inv(p, ds[i]) * p
     return s % prod
+
 
 def get_root(a, n):
     r00t = int(gmpy2.root(a, n))
     return r00t
-    
+
+
 def hastad(cs, ns, e):
     crt = chinese_remainder(ns, cs)
     r00t = get_root(crt, e)
@@ -62,43 +82,51 @@ def hastad(cs, ns, e):
         print(f"Не вдається знайти {e}-й корінь з {hex(crt)}")
 
 
-def timeit(func):
-    @wraps(func)
-    def timeit_wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        total_time = end_time - start_time
-        
-        print(f'Час виконання функції {func.__name__}({args}) в секундах становить {total_time:.4f} секунд.')
-        return result
-    return timeit_wrapper
+def timeit(display_args):
+    def decorator(func):
+        @wraps(func)
+        def timeit_wrapper(*args, **kwargs):
+            start_time = time.perf_counter()
+            result = func(*args, **kwargs)
+            end_time = time.perf_counter()
+            total_time = end_time - start_time
+            msg = func.__name__
+            msg += f"({args})" if display_args else "()"
+            print(
+                f"Час виконання функції {msg} в секундах становить {total_time:.4f} секунд."
+            )
+            return result
+
+        return timeit_wrapper
+
+    return decorator
 
 
 def file_reader():
-    FILE = {}
+    file = {}
     for k1 in PATH.keys():
-        FILE[k1] = {}
+        file[k1] = {}
         for k2 in PATH[k1].keys():
-            FILE[k1][k2] = {}
-            if k1 == 'se':
-                FILE[k1][k2]['c'] = []
-                FILE[k1][k2]['n'] = []
+            file[k1][k2] = {}
+            if k1 == "se":
+                file[k1][k2]["c"] = []
+                file[k1][k2]["n"] = []
             else:
-                FILE[k1][k2]['c'] = 0
-                FILE[k1][k2]['n'] = 0
-            with open(PATH[k1][k2], mode = 'r') as file:  
-                text = file.read().lower().strip().split()
+                file[k1][k2]["c"] = 0
+                file[k1][k2]["n"] = 0
+            with open(PATH[k1][k2], mode="r") as f:
+                text = f.read().lower().strip().split()
                 res = [int(text[i], 16) for i in range(2, len(text), 3)]
-                if k1 == 'se':
-                    FILE[k1][k2]['c'] = [res[i] for i in range(0, len(res), 2)]
-                    FILE[k1][k2]['n'] = [res[i] for i in range(1, len(res), 2)]
-                    
-                else:
-                    FILE[k1][k2]['c'] = res[0]
-                    FILE[k1][k2]['n'] = res[1]
+                if k1 == "se":
+                    file[k1][k2]["c"] = [res[i] for i in range(0, len(res), 2)]
+                    file[k1][k2]["n"] = [res[i] for i in range(1, len(res), 2)]
 
-    return FILE
+                else:
+                    file[k1][k2]["c"] = res[0]
+                    file[k1][k2]["n"] = res[1]
+
+    return file
+
 
 def calc_range_window(range_start, range_end, step):
     start = range_start
@@ -109,18 +137,26 @@ def calc_range_window(range_start, range_end, step):
         yield start, end
         start = end + 1
 
-def some_magic(e, l, n, step_size=1000,  processes = 2):
+
+@timeit(display_args=False)
+def some_magic(e, l, n, step_size=1000, processes=4):
+    x1 = np.arange(1, pow(2, l // 2) + 1)
     pool = Pool(processes=processes)
     sub_processes = []
-    for start, end in calc_range_window(1, 2**(l//2), step_size):
-        r = pool.apply_async(x_gen, [e, n, start, end])
+    for start, end in calc_range_window(0, x1.size-1, step_size):
+        r = pool.apply_async(x_gen, [x1[start:end+1], e, n, Config()])
         sub_processes.append(r)
-        yield r.get()
     pool.close()
     pool.join()
+    return [r.get() for r in sub_processes]
 
-def x_gen(e, n, start, end):
-    x = [(i, i**e % n) for i in range(start, end+1)]
+def x_gen(a, e, n, config):
+    save_file = config.precalculated_dir / f"x-{a[0]}-{a[-1]}.pkl"
+    if save_file.exists():
+        with open(save_file, "rb") as f:
+            x = pickle.load(f)
+    else:
+        x = [(int(i), pow(int(i), e, n)) for i in a]
+        with open(save_file, "wb") as f:
+            pickle.dump(x, f)
     return x
-
-
