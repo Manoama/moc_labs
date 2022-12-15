@@ -3,7 +3,9 @@ import argparse
 import pickle
 from pathlib import Path
 
+
 FILES_CONTENT = file_reader()
+
 
 @timeit(display_args=True)
 def attack_with_small_exponent(difficulty="hard"):
@@ -19,28 +21,23 @@ def attack_with_small_exponent(difficulty="hard"):
 
 @timeit(display_args=True)
 def meet_in_the_middle_attack(l, difficulty, processes, step_size):
-    e = 65537
-    c = FILES_CONTENT["mitm"][difficulty]["c"]
-    n = FILES_CONTENT["mitm"][difficulty]["n"]
-    x = get_x(difficulty, e, l, n, processes, step_size)
-    break_out_flag = False
-    for i in x:
-        cs = c * mod_inv(i[1], n) % n
-        for j in x:
-            if cs == j[1]:
-                print(f'M = {hex(i[0] * j[0])}')
-                break_out_flag = True
-                break
-        if break_out_flag:
-            break
-    else:
+
+    config = Config()
+    config.n = FILES_CONTENT["mitm"][difficulty]["n"]
+    config.c = FILES_CONTENT["mitm"][difficulty]["c"]
+    config.e = 65537
+    get_x(difficulty, config.e, l, config.n, processes, step_size)
+    m = find_m()
+    if m is None:
         print("Вiдкритий текст не було визначено.")
+    else:
+        print(f"M = {hex(m)}")
 
 
 @timeit(display_args=False)
 def get_x(difficulty, e, l, n, processes, step_size):
     config = Config()
-    config.precalculated_dir = Path(f"precalculated/{e}_{l}_{difficulty}/")
+    config.precalculated_dir = Path(f"{config.cache_dir}/{e}_{l}_{difficulty}/")
     config.precalculated_dir.mkdir(parents=True, exist_ok=True)
     save_file = config.precalculated_dir / "x.pkl"
     if save_file.exists():
@@ -50,7 +47,10 @@ def get_x(difficulty, e, l, n, processes, step_size):
         x = calculate_x(e, l, n, processes, step_size)
         with open(save_file, "wb") as f:
             pickle.dump(x, f)
-    return x
+    x = sorted(x, key = lambda x: x[0])
+    
+    config.x = [j for (i, j, c) in x]
+    config.cs = [c for (i, j, c) in x]
 
 
 @timeit(display_args=False)
@@ -75,14 +75,17 @@ def main():
         description="Cryptoanalysis of asymmetric cryptosystems on Applying attacks on RSA cryptosystem"
     )
     parser.add_argument(
-        "--processes", type=int, help="Number of processes to run", default=12
+        "--processes", type=int, help="Number of processes to run", default=10
     )
 
     parser.add_argument(
         "--step-size", type=int, help="Stop search of L at this value", default=100000
     )
+
+    parser.add_argument("--cache-dir", type=str, help="cache directory location", default="precalculated")
     args = parser.parse_args()
 
+    Config().cache_dir = args.cache_dir
     for key in FILES_CONTENT["se"].keys():
         attack_with_small_exponent(key)
 

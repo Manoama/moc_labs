@@ -22,6 +22,12 @@ class Singleton(object):
 
 class Config(Singleton):
     precalculated_dir: Path
+    cache_dir: str
+    x: list
+    c: int
+    n: int
+    cs: list
+    e : int
 
 
 def egcd(a, b):
@@ -138,17 +144,30 @@ def calc_range_window(range_start, range_end, step):
         start = end + 1
 
 
+def calculate_cs(x, c, n):
+    return (c * mod_inv(x, n)) % n
+
+
+@timeit(display_args=False)
+def find_m(config = Config()):
+    x, cs = config.x, config.cs
+    similiar = list(set(x)&set(cs))
+    ind = [x.index(i)+1 for i in similiar]
+    return np.prod(ind)
+
+
 @timeit(display_args=False)
 def some_magic(e, l, n, step_size=1000, processes=4):
     x1 = np.arange(1, pow(2, l // 2) + 1)
     pool = Pool(processes=processes)
     sub_processes = []
-    for start, end in calc_range_window(0, x1.size-1, step_size):
-        r = pool.apply_async(x_gen, [x1[start:end+1], e, n, Config()])
+    for start, end in calc_range_window(0, x1.size - 1, step_size):
+        r = pool.apply_async(x_gen, [x1[start : end + 1], e, n, Config()])
         sub_processes.append(r)
     pool.close()
     pool.join()
     return [r.get() for r in sub_processes]
+
 
 def x_gen(a, e, n, config):
     save_file = config.precalculated_dir / f"x-{a[0]}-{a[-1]}.pkl"
@@ -156,7 +175,11 @@ def x_gen(a, e, n, config):
         with open(save_file, "rb") as f:
             x = pickle.load(f)
     else:
-        x = [(int(i), pow(int(i), e, n)) for i in a]
+
+        x2 = [pow(int(i), e, n) for i in a]
+        cs = [calculate_cs(i, config.c, n)  for i in x2]
+        x = [(int(i), hash(str(j)), hash(str(k))) for (i, j, k) in zip(a, x2, cs)]
+
         with open(save_file, "wb") as f:
             pickle.dump(x, f)
     return x
